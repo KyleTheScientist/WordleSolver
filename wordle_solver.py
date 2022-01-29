@@ -10,6 +10,8 @@ def main():
     while True:
         print(f'\nTry: {word}')
         code = input("Input the color code (ex. bbyyg): ")
+        if code == 'stop' or code == 'done' or code == 'ggggg':
+            break
         solutions = get_remaining_solutions(word, code, solutions)
         print(f"{len(solutions)} possible solution{'s' if len(solutions) > 1 else ''}")
         scores = {}
@@ -23,7 +25,7 @@ def main():
         scores = sort_dictionary(scores, False)
         word = break_tie(list(scores.items()))
 
-with open("letter_frequencies.txt") as f:
+with open("letter_frequencies_indexed.txt") as f:
     letter_weights = json.loads(f.read())
 
 def break_tie(options):
@@ -33,16 +35,17 @@ def break_tie(options):
         if v != best: continue
         scores[k] = score_word(k)
     scores = sort_dictionary(scores)
-    # print(scores)
+    print(scores)
     return list(scores.keys())[0]
 
         
 def score_word(word):
     score = 0 
     found = []
-    for c in word:
+    for i in range(len(word)):
+        c = word[i]
         if c in found: continue
-        score += letter_weights[c]
+        score += letter_weights[i][c]
         found.append(c)
     return score
     

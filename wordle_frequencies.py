@@ -8,16 +8,21 @@ def sort_dictionary(dictionary, reverse=True):
     return result
 
 with open("solutions.txt") as f:
-    solutions = f.read()
-    frequencies = {}
-    for char in solutions:
-        if char not in frequencies:
-            frequencies[char] = 1
-        else:
-            frequencies[char] += 1
-    
-frequencies = sort_dictionary(frequencies)
-with open("letter_frequencies.txt", "w") as f:
+    solutions = f.readlines()
+    frequencies = [{} for _ in range(5)]
+    for i in range(5):
+        for solution in solutions:
+            solution = solution.strip()
+            char = solution[i]
+            if char not in frequencies[i]:
+                frequencies[i][char] = 1
+            else:
+                frequencies[i][char] += 1
+
+for i in range(len(frequencies)):
+    frequencies[i] = sort_dictionary(frequencies[i])
+
+with open("letter_frequencies_indexed.txt", "w") as f:
     f.write(json.dumps(frequencies))
 
 
