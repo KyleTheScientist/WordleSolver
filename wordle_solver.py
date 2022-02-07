@@ -4,7 +4,7 @@ from multiprocessing import Pool
 from hybrid_solver import HybridSolver
 
 def main():
-    solver = HybridSolver(threshold=1)
+    solver = HybridSolver(threshold=10)
     guesses = 0
     guess = ""
     while len(solver.solutions) != 1:
