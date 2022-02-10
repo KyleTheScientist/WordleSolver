@@ -7,8 +7,11 @@ class HybridSolver(Solver):
 
     def __init__(self, threshold=10):
         self.threshold = threshold
-        with open("hybrid_cache.txt", "r") as f:
-            self.cache = json.loads(f.read())
+        try:
+            with open("hybrid_cache.txt", "r") as f:
+                self.cache = json.loads(f.read())
+        except:
+            self.cache = {}
         super().__init__()
 
     def guess(self, guess_count):
@@ -28,7 +31,7 @@ class HybridSolver(Solver):
                 self.last_word = self.get_best_word(attempting_solve=attempting_solve)
                 if guess_count == 1 and not attempting_solve:
                     self.cache[code] = self.last_word
-                    with open("hybrid_cache2.txt", 'w') as f:
+                    with open("hybrid_cache.txt", 'w') as f:
                         f.writelines([f'"{k}": "{v}",\n' for k, v in self.cache.items()])
         return self.last_word
 
@@ -38,7 +41,7 @@ class HybridSolver(Solver):
         for solution in self.solutions:
             count += 1
             for s in (self.solutions if attempting_solve else self.all_solutions):
-                rs = self.get_remaining_solutions(self.last_word, self.get_code(s, solution))
+                rs = self.get_remaining_solutions(s, self.get_code(s, solution))
                 if s not in scores:
                     scores[s] = len(rs)
                 else:

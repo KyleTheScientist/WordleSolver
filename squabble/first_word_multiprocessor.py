@@ -3,47 +3,45 @@ import json
 from multiprocessing import Pool
 from solver import Solver
 
-class SimpleSolver(Solver):
+class FirstWordSolver(Solver):
 
     def __init__(self):
-        with open("simple_cache.txt", "r") as f:
-            self.cache = json.loads(f.read())
         super().__init__()
 
-    def guess(self, guess_count):
-        if guess_count == 0:
-            self.last_word = "RAISE"
-        else:
-            code = self.get_code(self.last_word, self.solution)
+    def get_best_word(self):
+        num_processes = 3
+        partitioned_solutions = []
+        partition_length = len(self.solutions)//num_processes
+        for p in range(num_processes - 1):
+            partitioned_solutions.append((p, self.solutions[p * partition_length: (p + 1) * partition_length]))
+        p += 1
+        partitioned_solutions.append((p, self.solutions[p * partition_length:]))
 
-            self.solutions = self.get_remaining_solutions(self.last_word, code)
-            if self.manual:
-                print(f"{len(self.solutions)} possible solution{'s' if len(self.solutions) != 1 else ''}")
+        with Pool(num_processes) as p:
+            p.map(self.score_words, partitioned_solutions)
 
-            if guess_count == 1 and code in self.cache:
-                self.last_word = self.cache[code]
-            else:
-                self.last_word = self.get_best_word(attempting_solve=True)
-                if guess_count == 1:
-                    self.cache[code] = self.last_word
-                    with open("simple_cache.txt", 'w') as f:
-                        f.writelines([f'"{k}": "{v}",\n' for k, v in self.cache.items()])
-        return self.last_word
-
-    def get_best_word(self, attempting_solve=True):
+    def score_words(self, package):
         scores = {}
         count = 0
-        for solution in self.solutions:
+        alias, solutions = package
+        for solution in self.all_solutions:
             count += 1
-            for s in (self.solutions if attempting_solve else self.all_solutions):
+            self.log(f"Simulating {solution} | ({count} / {len(solutions)}) solutions simulated", alias)
+            for s in solutions:
                 rs = self.get_remaining_solutions(s, self.get_code(s, solution))
                 if s not in scores:
                     scores[s] = len(rs)
                 else:
                     scores[s] += len(rs)
-        scores = self.sort_dictionary(scores, False)
-        best_word = self.break_tie(list(scores.items()))
-        return best_word
+            self.write_scores(self.sort_dictionary(scores, False), alias)
+
+    def write_scores(self, scores, alias):
+        with open(f"scores_{alias}.txt", 'w') as f:
+            f.write(json.dumps(scores))
+
+    def log(self, message, alias):
+        with open(f"output_{alias}.txt", 'a') as f:
+            f.write(message + "\n")
 
     def break_tie(self, options):
         scores = {}
@@ -79,3 +77,6 @@ class SimpleSolver(Solver):
             frequencies[i] = self.sort_dictionary(frequencies[i])
 
         return frequencies
+
+if __name__ == "__main__":
+    FirstWordSolver().get_best_word()

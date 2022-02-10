@@ -7,8 +7,8 @@ def main():
         all_solutions = f.read().upper().split()
 
     scores = [0 for i in range(8)]
-    # solver = HybridSolver(threshold=10000)
-    solver = SimpleSolver()
+    solver = HybridSolver(threshold=2)
+    # solver = SimpleSolver()
     count = 1
     for solution in all_solutions:
         print(f"The solution is {solution} ({count}/{len(all_solutions)})", end="\r")
