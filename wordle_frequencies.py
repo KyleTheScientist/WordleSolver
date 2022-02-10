@@ -7,7 +7,7 @@ def sort_dictionary(dictionary, reverse=True):
         result[key] = dictionary[key]
     return result
 
-with open("solutions.txt") as f:
+with open("data/solutions.txt") as f:
     solutions = f.readlines()
     frequencies = [{} for _ in range(5)]
     for i in range(5):
@@ -22,7 +22,7 @@ with open("solutions.txt") as f:
 for i in range(len(frequencies)):
     frequencies[i] = sort_dictionary(frequencies[i])
 
-with open("letter_frequencies_indexed.txt", "w") as f:
+with open("data/letter_frequencies_indexed.txt", "w") as f:
     f.write(json.dumps(frequencies))
 
 

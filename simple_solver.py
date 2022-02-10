@@ -6,7 +6,7 @@ from solver import Solver
 class SimpleSolver(Solver):
 
     def __init__(self):
-        with open("simple_cache.txt", "r") as f:
+        with open("data/simple_cache.txt", "r") as f:
             self.cache = json.loads(f.read())
         super().__init__()
 
@@ -26,7 +26,7 @@ class SimpleSolver(Solver):
                 self.last_word = self.get_best_word(attempting_solve=True)
                 if guess_count == 1:
                     self.cache[code] = self.last_word
-                    with open("simple_cache.txt", 'w') as f:
+                    with open("data/simple_cache.txt", 'w') as f:
                         f.writelines([f'"{k}": "{v}",\n' for k, v in self.cache.items()])
         return self.last_word
 

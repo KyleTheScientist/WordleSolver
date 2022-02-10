@@ -1,6 +1,6 @@
 class Solver:
     def __init__(self):
-        with open("solutions.txt") as f:
+        with open("data/solutions.txt") as f:
             self.solutions_template = f.read().upper().split()
         self.set_solution(None)
 

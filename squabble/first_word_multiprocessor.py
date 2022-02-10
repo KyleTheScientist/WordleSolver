@@ -9,7 +9,7 @@ class FirstWordSolver(Solver):
         super().__init__()
 
     def get_best_word(self):
-        num_processes = 5
+        num_processes = 15
         manager = Manager()
         log = manager.list()
         scores = manager.dict()
@@ -42,15 +42,15 @@ class FirstWordSolver(Solver):
 
     def score_words(self, package):
         count = 0
-        alias, solutions, scores, log = package
+        alias, partition, scores, log = package
         print(f"{alias} | {len(scores)}")
-        for solution in self.all_solutions:
+        for solution in partition:
             start = time.time()
-            for s in solutions:
-                rs = self.get_remaining_solutions(s, self.get_code(s, solution))
+            for s in self.all_solutions:
+                rs = self.get_remaining_partition(s, self.get_code(s, solution))
                 scores[s] += len(rs)
             count += 1
-            print(f"{alias} | Simulated {solution} in {int(time.time() - start)} seconds | ({count} / {len(solutions)}) solutions simulated")
+            print(f"{alias} | Simulated {solution} in {int(time.time() - start)} seconds | ({count} / {len(partition)}) solutions simulated")
             if alias == 0:
                 try:
                     self.write_scores(self.sort_dictionary(dict(scores), False))
@@ -59,11 +59,11 @@ class FirstWordSolver(Solver):
                 
 
     def write_scores(self, scores):
-        with open(f"scores.txt", 'w') as f:
+        with open(f"data/scores.txt", 'w') as f:
             f.write(json.dumps(scores))
 
     def log(self, message):
-        with open(f"output.txt", 'w') as f:
+        with open(f"data/output.txt", 'w') as f:
             f.write(message + "\n")
 
     def break_tie(self, options):

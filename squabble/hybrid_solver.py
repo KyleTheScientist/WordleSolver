@@ -10,42 +10,47 @@ class HybridSolver(Solver):
         try:
             with open("data/hybrid_cache.txt", "r") as f:
                 self.cache = json.loads(f.read())
-        except:
+        except FileNotFoundError as e:
+            print("No cache file found")
             self.cache = {}
+        
+        self.last_word = ""
         super().__init__()
 
     def guess(self, guess_count):
         if guess_count == 0:
-            self.last_word = "RAISE"
+            code = "uuuuu"
         else:
             code = self.get_code(self.last_word, self.solution)
 
-            self.solutions = self.get_remaining_solutions(self.last_word, code)
-            if self.manual:
-                print(f"{len(self.solutions)} possible solution{'s' if len(self.solutions) != 1 else ''}")
+        self.solutions = self.get_remaining_solutions(self.last_word, code)
+        if self.manual:
+            print(f"{len(self.solutions)} possible solution{'s' if len(self.solutions) != 1 else ''}")
 
-            attempting_solve = len(self.solutions) <= self.threshold
-            if not attempting_solve and guess_count == 1 and code in self.cache:
-                self.last_word = self.cache[code]
-            else:
-                self.last_word = self.get_best_word(attempting_solve=attempting_solve)
-                if guess_count == 1 and not attempting_solve:
-                    self.cache[code] = self.last_word
-                    with open("data/hybrid_cache.txt", 'w') as f:
-                        f.writelines([f'"{k}": "{v}",\n' for k, v in self.cache.items()])
+        attempting_solve = len(self.solutions) <= self.threshold
+        if not attempting_solve and guess_count == 1 and code in self.cache:
+            self.last_word = self.cache[code]
+        else:
+            self.last_word = self.get_best_word(attempting_solve=attempting_solve)
+            if guess_count == 1 and not attempting_solve:
+                self.cache[code] = self.last_word
+                with open("data/hybrid_cache.txt", 'w') as f:
+                    f.writelines([f'"{k}": "{v}",\n' for k, v in self.cache.items()])
         return self.last_word
 
     def get_best_word(self, attempting_solve=True):
         scores = {}
         count = 0
+        length = len(self.solutions)
         for solution in self.solutions:
             count += 1
             for s in (self.solutions if attempting_solve else self.all_solutions):
-                rs = self.get_remaining_solutions(s, self.get_code(s, solution))
+                rs = self.get_remaining_solutions(self.last_word, self.get_code(s, solution))
                 if s not in scores:
                     scores[s] = len(rs)
                 else:
                     scores[s] += len(rs)
+                print(f"{solution} ({count} / {length}): {s}", end='\r')
         scores = self.sort_dictionary(scores, False)
         best_word = self.break_tie(list(scores.items()))
         return best_word

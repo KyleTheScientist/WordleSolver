@@ -3,7 +3,7 @@ from hybrid_solver import HybridSolver
 from simple_solver import SimpleSolver
 
 def main():
-    with open("solutions.txt") as f:
+    with open("data/solutions.txt") as f:
         all_solutions = f.read().upper().split()
 
     scores = [0 for i in range(8)]
