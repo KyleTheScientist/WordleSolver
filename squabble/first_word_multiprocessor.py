@@ -1,6 +1,6 @@
 import time
 import json
-from multiprocessing import Pool
+from multiprocessing import Pool, Manager, managers
 from solver import Solver
 
 class FirstWordSolver(Solver):
@@ -9,38 +9,61 @@ class FirstWordSolver(Solver):
         super().__init__()
 
     def get_best_word(self):
-        num_processes = 3
+        num_processes = 5
+        manager = Manager()
+        log = manager.list()
+        scores = manager.dict()
+        for solution in self.all_solutions:
+            scores[solution] = 0
+        
         partitioned_solutions = []
         partition_length = len(self.solutions)//num_processes
         for p in range(num_processes - 1):
-            partitioned_solutions.append((p, self.solutions[p * partition_length: (p + 1) * partition_length]))
+            partitioned_solutions.append((
+                p, 
+                self.solutions[p * partition_length: (p + 1) * partition_length],
+                scores,
+                log
+            ))
+        
         p += 1
-        partitioned_solutions.append((p, self.solutions[p * partition_length:]))
+        partitioned_solutions.append((
+            p, 
+            self.solutions[p * partition_length:], 
+            scores,
+            log
+        ))
 
         with Pool(num_processes) as p:
             p.map(self.score_words, partitioned_solutions)
 
+        print("The best word is:")
+        print(scores[0])
+
     def score_words(self, package):
-        scores = {}
         count = 0
-        alias, solutions = package
+        alias, solutions, scores, log = package
+        print(f"{alias} | {len(scores)}")
         for solution in self.all_solutions:
-            count += 1
-            self.log(f"Simulating {solution} | ({count} / {len(solutions)}) solutions simulated", alias)
+            start = time.time()
             for s in solutions:
                 rs = self.get_remaining_solutions(s, self.get_code(s, solution))
-                if s not in scores:
-                    scores[s] = len(rs)
-                else:
-                    scores[s] += len(rs)
-            self.write_scores(self.sort_dictionary(scores, False), alias)
+                scores[s] += len(rs)
+            count += 1
+            print(f"{alias} | Simulated {solution} in {int(time.time() - start)} seconds | ({count} / {len(solutions)}) solutions simulated")
+            if alias == 0:
+                try:
+                    self.write_scores(self.sort_dictionary(dict(scores), False))
+                except Exception as e:
+                    print(e)
+                
 
-    def write_scores(self, scores, alias):
-        with open(f"scores_{alias}.txt", 'w') as f:
+    def write_scores(self, scores):
+        with open(f"scores.txt", 'w') as f:
             f.write(json.dumps(scores))
 
-    def log(self, message, alias):
-        with open(f"output_{alias}.txt", 'a') as f:
+    def log(self, message):
+        with open(f"output.txt", 'w') as f:
             f.write(message + "\n")
 
     def break_tie(self, options):
