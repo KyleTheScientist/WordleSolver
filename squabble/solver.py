@@ -1,7 +1,18 @@
+import json
+
 class Solver:
     def __init__(self):
         with open("data/solutions.txt") as f:
             self.solutions_template = f.read().upper().split()
+        with open("data/remaining.txt") as f:
+            self.remaining = json.loads(f.read())
+            for key in self.remaining.keys():
+                self.remaining[key] = set(self.remaining[key])
+        with open("data/removals.txt") as f:
+            self.removals = json.loads(f.read())
+            for key in self.removals.keys():
+                self.removals[key] = set(self.removals[key])
+
         self.set_solution(None)
 
     def set_solution(self, solution):
@@ -29,26 +40,18 @@ class Solver:
         return code
 
     def get_remaining_solutions(self, word, code):
-        remaining = []
-        for s in self.solutions:
-            valid = True
-            for i in range(len(word)):
-                if not self.valid_char(i, word, code, s):
-                    valid = False
-            if valid:
-                remaining.append(s)
-        return remaining
+        remaining = set(self.solutions)
+        for index in range(len(word)):
+            key = f"{index}{word[index]}{code[index]}"
+            remaining.difference_update(self.removals[key])
+        return list(remaining)
 
     def count_remaining_solutions(self, word, code):
-        remaining = 0
-        for s in self.solutions:
-            valid = True
-            for i in range(len(word)):
-                if not self.valid_char(i, word, code, s):
-                    valid = False
-            if valid:
-                remaining += 1
-        return remaining
+        remaining = set(self.solutions)
+        for index in range(len(word)):
+            key = f"{index}{word[index]}{code[index]}"
+            remaining.difference_update(self.removals[key])
+        return len(remaining)
 
     def valid_char(self, index, word, code, solution):
         character = word[index]
