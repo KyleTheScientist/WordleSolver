@@ -12,24 +12,24 @@ def valid_char(index, character, code, solution):
         return False
     return True
 
-def get_remaining_solutions(index, character, code):
-        remaining = []
-        for solution in all_solutions:
-            if not valid_char(index, character, code, solution): continue
-            remaining.append(solution)
-        return remaining
+def get_removed_solutions(index, character, code):
+    removals = []
+    for i in range(len(all_solutions)):
+        if not valid_char(index, character, code, all_solutions[i]):
+            removals.append(i)
+    return removals
 
 if __name__ == "__main__":
     with open("data/solutions.txt") as f:
         all_solutions = f.read().upper().split()
 
-    remaining = {}
+    removals = {}
     for index in range(5):
         for character in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
             for code in 'byg':
                 key = f"{index}{character}{code}"
-                remaining[key] = get_remaining_solutions(index, character, code)
+                removals[key] = get_removed_solutions(index, character, code)
 
-    with open('data/remaining.txt', 'w') as f:
-        f.write(json.dumps(remaining))
+    with open('data/removal_indices.txt', 'w') as f:
+        f.write(json.dumps(removals))
 
