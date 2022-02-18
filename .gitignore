@@ -130,4 +130,4 @@ dmypy.json
 
 output_*
 scores_*
-*.json
+*lookup*.json

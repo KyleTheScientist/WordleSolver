@@ -1,69 +1,61 @@
+import json
+import time
 class Solver:
     def __init__(self):
         with open("data/solutions.txt") as f:
-            self.solutions_template = f.read().upper().split()
+            self.solution_strings = f.read().upper().split()
+        
+        with open("data/removal_indices.txt") as f:
+            self.removals = json.loads(f.read())
+            for key in self.removals.keys():
+                self.removals[key] = set(self.removals[key])
+
+        print("Building lookup table...")
+        with open("data/code_lookup.json") as f:
+            self.lookup_table = json.loads(f.read())
+        print("Done!")
         self.set_solution(None)
 
-    def set_solution(self, solution):
-        self.solution = solution
-        self.manual = self.solution is None
+    def set_solution(self, string):
+        self.manual = string is None
+        self.solution = self.index_of(string)
 
-        self.solutions = self.solutions_template.copy()
-        self.all_solutions = self.solutions_template.copy()
+        self.solutions = range(len(self.solution_strings))
+        self.all_solutions = range(len(self.solution_strings))
+        self.solutions_set = set(range(len(self.solution_strings)))
 
     def guess(self, guess_count):
-        pass
+        raise NotImplementedError()
 
-    def get_code(self, word, solution):
-        if solution == None:
+    def get_code(self, word, solution, manual=False):
+        if manual:
             code = input("Input the color code (ex. bbyyg): ")
             return code
-        code = ""
-        for i in range(len(word)):
-            if word[i] not in solution:
-                code += 'b'
-            elif solution[i] != word[i]:
-                code += 'y'
-            else:
-                code += 'g'
-        return code
+        return self.lookup_table[word][solution]
 
     def get_remaining_solutions(self, word, code):
-        remaining = []
-        for s in self.solutions:
-            valid = True
-            for i in range(len(word)):
-                if not self.valid_char(i, word, code, s):
-                    valid = False
-            if valid:
-                remaining.append(s)
+        remaining = set(self.solutions)
+        string = self.solution_strings[word]
+        for index in range(len(string)):
+            key = f"{index}{string[index]}{code[index]}"
+            remaining.difference_update(self.removals[key])
         return remaining
 
     def count_remaining_solutions(self, word, code):
-        remaining = 0
-        for s in self.solutions:
-            valid = True
-            for i in range(len(word)):
-                if not self.valid_char(i, word, code, s):
-                    valid = False
-            if valid:
-                remaining += 1
-        return remaining
-
-    def valid_char(self, index, word, code, solution):
-        character = word[index]
-        c = code[index]
-        if c == 'b' and character in solution:
-            return False
-        elif c == 'y' and (character not in solution or character == solution[index]):
-            return False
-        elif c == 'g' and solution[index] != character:
-            return False
-        return True
+        return len(self.get_remaining_solutions(word, code))
 
     def sort_dictionary(self, dictionary, reverse=True):
-        sort = sorted(dictionary, key=dictionary.get, reverse=reverse)
         result = {}
-        for key in sort:
+        for key in self.sort_keys(dictionary, reverse):
             result[key] = dictionary[key]
         return result
+
+    def sort_keys(self, dictionary, reverse=True):
+        return sorted(dictionary, key=dictionary.get, reverse=reverse)
+
+    def index_of(self, string):
+        if string is None: return -1
+        return self.solution_strings.index(string)
+
+    def string(self, index):
+        return self.solution_strings[index]
